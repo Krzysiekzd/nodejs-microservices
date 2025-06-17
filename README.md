@@ -24,7 +24,74 @@ This project demonstrates a modern microservices architecture for an Order & Inv
 
 ## 🏗️ Architecture
 
-<img src="https://raw.githubusercontent.com/JawherKl/nodejs-microservices/main/docs/architecture-diagram.png" alt="Microservices Architecture" width="700" />
+```mermaid
+graph TB
+    %% Application Layer
+    subgraph "Application Layer"
+        agw[API Gateway]
+        us[User Service<br/>NestJS]
+        ps[Product Service<br/>ExpressJS]
+        os[Order Service<br/>NestJS]
+        isvc[Inventory Service<br/>ExpressJS]
+        ns[Notification Service<br/>ExpressJS]
+    end
+
+    %% Database Layer
+    subgraph "Database Layer"
+        pg[(PostgreSQL)]
+        mongo[(MongoDB)]
+    end
+
+    %% Messaging Layer
+    subgraph "Messaging"
+        rmq[[RabbitMQ<br/>Message Broker]]
+    end
+
+    %% Dependencies and Connections
+    agw -->|REST| us
+    agw -->|REST| ps
+    agw -->|REST| os
+    agw -->|REST| isvc
+    agw -->|REST| ns
+
+    us -- "DATABASE_URL" --> pg
+    os -- "DATABASE_URL" --> pg
+    ps -- "mongodb://..." --> mongo
+    isvc -- "mongodb://..." --> mongo
+    ns -- "mongodb://..." --> mongo
+
+    us -- "RABBITMQ_URL" --> rmq
+    os -- "RABBITMQ_URL" --> rmq
+    isvc -- "RABBITMQ_URL" --> rmq
+    ns -- "RABBITMQ_URL" --> rmq
+
+    %% Messaging Events
+    rmq -- "Events" --> os
+    rmq -- "Events" --> isvc
+    rmq -- "Events" --> ns
+
+    %% External Ports Exposure
+    agw -->|":3000"| extgw[External Access]
+    us -->|":3001"| extus[External Access]
+    ps -->|":3002"| extps[External Access]
+    os -->|":3003"| extos[External Access]
+    isvc -->|":3004"| extis[External Access]
+    ns -->|":3005"| extns[External Access]
+    pg -->|":9091"| extpg[External Access]
+    mongo -->|":9092"| extmongo[External Access]
+    rmq -->|":9093/9094"| extrmq[External Access]
+
+    %% Class Styling
+    classDef app fill:#2ecc71,stroke:#27ae60,color:white
+    classDef db fill:#3498db,stroke:#2980b9,color:white
+    classDef msg fill:#e67e22,stroke:#d35400,color:white
+    classDef ext fill:#95a5a6,stroke:#7f8c8d,color:white
+
+    class agw,us,ps,os,isvc,ns app
+    class pg,mongo db
+    class rmq msg
+    class extgw,extus,extps,extos,extis,extns,extpg,extmongo,extrmq ext
+```
 
 | Microservice             | Tech Stack                           | DB         | Responsibility                                    |
 | ------------------------ | ------------------------------------ | ---------- | ------------------------------------------------- |
