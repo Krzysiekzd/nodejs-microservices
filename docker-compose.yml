@@ -11,6 +11,8 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - '9091:5432'
+    networks:
+      - nodejs_network
 
   # MongoDB for product, inventory, and notification services
   mongodb:
@@ -20,6 +22,8 @@ services:
       - '9092:27017'
     volumes:
       - mongo_data:/data/db
+    networks:
+      - nodejs_network
 
   # RabbitMQ message broker
   rabbitmq:
@@ -30,6 +34,8 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - nodejs_network
 
   # User service (NestJS + PostgreSQL)
   user-service:
@@ -43,6 +49,8 @@ services:
     depends_on:
       - postgres
       - rabbitmq
+    networks:
+      - nodejs_network
 
   # Placeholder for other services
   product-service:
@@ -51,6 +59,8 @@ services:
       - '3002:3000'
     depends_on:
       - mongodb
+    networks:
+      - nodejs_network
 
   order-service:
     build: ./order-service
@@ -59,6 +69,8 @@ services:
     depends_on:
       - postgres
       - rabbitmq
+    networks:
+      - nodejs_network
 
   inventory-service:
     build: ./inventory-service
@@ -67,6 +79,8 @@ services:
     depends_on:
       - mongodb
       - rabbitmq
+    networks:
+      - nodejs_network
 
   notification-service:
     build: ./notification-service
@@ -75,17 +89,25 @@ services:
     depends_on:
       - mongodb
       - rabbitmq
+    networks:
+      - nodejs_network
 
   api-gateway:
     build: ./api-gateway
     ports:
-      - '3000:3000'
+      - '3006:3000'
     depends_on:
       - user-service
       - product-service
       - order-service
       - inventory-service
       - notification-service
+    networks:
+      - nodejs_network
+
+networks:
+  nodejs_network:
+    driver: bridge
 
 volumes:
   postgres_data:
