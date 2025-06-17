@@ -1,0 +1,92 @@
+version: '3.9'
+services:
+  # PostgreSQL for user-service and order-service
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '9091:5432'
+
+  # MongoDB for product, inventory, and notification services
+  mongodb:
+    image: mongo:6
+    restart: always
+    ports:
+      - '9092:27017'
+    volumes:
+      - mongo_data:/data/db
+
+  # RabbitMQ message broker
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - '9093:5672'     # AMQP
+      - '9094:15672'   # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  # User service (NestJS + PostgreSQL)
+  user-service:
+    build: ./user-service
+    restart: always
+    ports:
+      - '3001:3000'
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/userdb
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    depends_on:
+      - postgres
+      - rabbitmq
+
+  # Placeholder for other services
+  product-service:
+    build: ./product-service
+    ports:
+      - '3002:3000'
+    depends_on:
+      - mongodb
+
+  order-service:
+    build: ./order-service
+    ports:
+      - '3003:3000'
+    depends_on:
+      - postgres
+      - rabbitmq
+
+  inventory-service:
+    build: ./inventory-service
+    ports:
+      - '3004:3000'
+    depends_on:
+      - mongodb
+      - rabbitmq
+
+  notification-service:
+    build: ./notification-service
+    ports:
+      - '3005:3000'
+    depends_on:
+      - mongodb
+      - rabbitmq
+
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - '3000:3000'
+    depends_on:
+      - user-service
+      - product-service
+      - order-service
+      - inventory-service
+      - notification-service
+
+volumes:
+  postgres_data:
+  mongo_data:
