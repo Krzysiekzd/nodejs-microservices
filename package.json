@@ -1,0 +1,26 @@
+{
+  "name": "nodejs-microservices",
+  "version": "1.0.0",
+  "description": "![Repository Size](https://img.shields.io/github/repo-size/JawherKl/nodejs-microservices) ![Last Commit](https://img.shields.io/github/last-commit/JawherKl/nodejs-microservices) ![Issues](https://img.shields.io/github/issues-raw/JawherKl/nodejs-microservices) ![Forks](https://img.shields.io/github/forks/JawherKl/nodejs-microservices) ![Stars](https://img.shields.io/github/stars/JawherKl/nodejs-microservices)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JawherKl/nodejs-microservices.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/JawherKl/nodejs-microservices/issues"
+  },
+  "homepage": "https://github.com/JawherKl/nodejs-microservices#readme",
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "mongoose": "^8.16.0"
+  }
+}
