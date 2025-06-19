@@ -37,6 +37,14 @@ services:
     networks:
       - nodejs_network
 
+  product-event-listener:
+    build:
+      context: ./product-event-listener
+    depends_on:
+      - rabbitmq
+    env_file:
+      - ./product-event-listener/.env
+
   # User service (NestJS + PostgreSQL)
   user-service:
     build: ./user-service
