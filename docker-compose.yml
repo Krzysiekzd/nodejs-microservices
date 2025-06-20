@@ -45,6 +45,15 @@ services:
     env_file:
       - ./product-event-listener/.env
 
+  order-event-listener:
+    build:
+      context: ./order-event-listener
+    container_name: order-event-listener
+    depends_on:
+      - rabbitmq
+    env_file:
+      - ./order-event-listener/.env
+
   # User service (NestJS + PostgreSQL)
   user-service:
     build: ./user-service

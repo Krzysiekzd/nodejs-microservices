@@ -6,4 +6,10 @@ const productSchema = Joi.object({
   inStock: Joi.boolean().required(),
 });
 
-module.exports = { productSchema };
+const updateProductSchema = Joi.object({
+  name: Joi.string().min(2).max(100),
+  price: Joi.number().positive(),
+  inStock: Joi.boolean(),
+}).min(1);
+
+module.exports = { productSchema, updateProductSchema };
