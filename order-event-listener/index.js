@@ -24,5 +24,4 @@ async function start() {
     console.error('❌ Failed to start order-event-listener:', err);
   }
 }
-
 start();
