@@ -19,6 +19,8 @@ A modular, production-ready microservices system inspired by e-commerce architec
 
 ---
 
+<img width="420" alt="nodejs-microservice" src="https://github.com/user-attachments/assets/8ae30270-d510-495d-b69e-5911c6142ec1" />
+
 ## ✨ Overview
 
 This project demonstrates a modern microservices architecture for an Order & Inventory System, suitable for real-world companies. Each service is designed with single responsibility, clear separation, and scalable technologies.
