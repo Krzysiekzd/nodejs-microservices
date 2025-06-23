@@ -30,4 +30,18 @@ export class OrderService {
   async getAll() {
     return this.repo.find();
   }
+  async getById(id: string) {
+    return this.repo.findOne({ where: { id } });
+  }
+
+  async deleteOrder(id: string) {
+    const order = await this.repo.findOne({ where: { id } });
+    if (order) {
+      await this.repo.delete(id);
+      // Optionally publish to queue:
+      // await publishToQueue('order_deleted', { id });
+    }
+    return order;
+  }
+
 }
