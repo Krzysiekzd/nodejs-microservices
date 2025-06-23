@@ -1,12 +1,15 @@
-const express = require('express');
-const app = express();
-app.use(express.json());
+import express from 'express';
+import dotenv from 'dotenv';
+import { startConsumer } from './src/queue/consumer.js';
 
-app.post('/notify', (req, res) => {
-  console.log('Notification:', req.body);
-  res.json({ message: 'Notification received' });
+dotenv.config();
+const app = express();
+
+app.get('/', (req, res) => {
+  res.send('🔔 Notification service running');
 });
 
-app.listen(3000, () => {
-  console.log('Notification Service running on port 3000');
+app.listen(process.env.PORT, async () => {
+  console.log(`🚀 Notification service running on port ${process.env.PORT}`);
+  await startConsumer();
 });
