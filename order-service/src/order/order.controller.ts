@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { IsUUID, IsInt, Min } from 'class-validator';
 
@@ -33,10 +33,20 @@ export class OrderController {
   findAll() {
     return this.orderService.getAll();
   }
+  
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.orderService.getById(id);
+  }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() body: UpdateOrderDto) {
     return this.orderService.updateOrder(id, body);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.orderService.deleteOrder(id);
   }
 
 }
