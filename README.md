@@ -8,7 +8,6 @@
 
 A modular, production-ready microservices system inspired by e-commerce architectures, built with TypeScript, Node.js, NestJS, ExpressJS, PostgreSQL, MongoDB, Docker, and RabbitMQ/NATS for event-driven communication.
 
-
 ![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
 ![NestJS](https://img.shields.io/badge/nestjs-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)
 ![ExpressJS](https://img.shields.io/badge/express.js-000000?style=for-the-badge&logo=express&logoColor=white)
@@ -20,7 +19,6 @@ A modular, production-ready microservices system inspired by e-commerce architec
 ---
 
 <img width="420" alt="nodejs-microservice" src="https://github.com/user-attachments/assets/8ae30270-d510-495d-b69e-5911c6142ec1" />
-
 
 ## ✨ Overview
 
