@@ -7,10 +7,9 @@ import { Inject } from '@nestjs/common';
 export class RabbitMQService implements OnModuleInit {
   private connection: amqp.Connection;
   private channel: amqp.Channel;
+  private readonly queue = 'product_created';
 
   //constructor(private readonly productService: ProductService) {}
-
-  private readonly queue = 'product_created';
 
   async onModuleInit() {
     await this.connect();
