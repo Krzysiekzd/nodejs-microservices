@@ -221,4 +221,4 @@ Made with ❤️ for scalable, real-world systems.
 
 
 ## Stargazers over time
-[![Stargazers over time](https://starchart.cc/JawherKl/node-api-postgres.svg?variant=adaptive)](https://starchart.cc/JawherKl/node-api-postgres)
+[![Stargazers over time](https://starchart.cc/JawherKl/node-api-postgres.svg?variant=adaptive)](https://starchart.cc/JawherKl/nodejs-microservices)
