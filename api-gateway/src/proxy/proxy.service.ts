@@ -1,15 +1,23 @@
-import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { lastValueFrom } from 'rxjs';
+import { Injectable } from '@nestjs/common';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class ProxyService {
-  constructor(private readonly httpService: HttpService) {}
+  constructor(private http: HttpService) {}
 
-  async proxyRequest(method: string, url: string, data: any, headers: any) {
-    const config = { headers };
-    const observable = this.httpService.request({ method, url, data, ...config });
-    const response = await lastValueFrom(observable);
-    return response.data;
+  async forwardGet(url: string) {
+    const res = await firstValueFrom(this.http.get(url));
+    return res.data;
+  }
+
+  async forwardPost(url: string, data: any) {
+    const res = await firstValueFrom(this.http.post(url, data));
+    return res.data;
+  }
+
+  async forwardPatch(url: string, data: any) {
+    const res = await firstValueFrom(this.http.patch(url, data));
+    return res.data;
   }
 }

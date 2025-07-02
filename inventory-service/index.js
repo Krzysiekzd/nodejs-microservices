@@ -65,7 +65,7 @@ app.patch('/products/:id/replenish', async (req, res) => {
   });
 });
 
-const PORT = process.env.PORT || 3004;
+const PORT = process.env.PORT || 3007;
 
 app.listen(PORT, async () => {
   console.log(`🚀 Inventory service running on port ${PORT}`);

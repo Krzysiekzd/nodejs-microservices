@@ -92,7 +92,7 @@ services:
   inventory-service:
     build: ./inventory-service
     ports:
-      - '3004:3000'
+      - '3007:3000'
     depends_on:
       - mongodb
       - rabbitmq
@@ -102,7 +102,7 @@ services:
   notification-service:
     build: ./notification-service
     ports:
-      - '3005:3000'
+      - '3011:3000'
     depends_on:
       - mongodb
       - rabbitmq
