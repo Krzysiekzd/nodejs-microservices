@@ -15,6 +15,6 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async getProfile(@Request() req) {
-    return req.user; // Comes from JwtStrategy's validate()
+    return req.user;
   }
 }
