@@ -13,6 +13,24 @@ export async function startConsumer() {
   const conn = await amqp.connect(process.env.RABBITMQ_URL);
   channel = await conn.createChannel();
 
+  await channel.assertQueue('product_created', { durable: false });
+  channel.consume('product_created', async (msg) => {
+    if (!msg) return;
+    const data = JSON.parse(msg.content.toString());
+    let product = await Product.findById(data.id);
+    if (!product) {
+      product = new Product({
+        _id: data.id,
+        name: data.name,
+        price: data.price,
+        stock: typeof data.stock === 'number' ? data.stock : 0,
+      });
+      await product.save();
+      console.log('✅ Product created in inventory:', product);
+    }
+    channel.ack(msg);
+  });
+
   const queue = 'order_created';
   await channel.assertQueue(queue, { durable: false });
 
