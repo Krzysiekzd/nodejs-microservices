@@ -17,6 +17,11 @@ export class UsersController {
     return this.proxy.forwardPost(`${process.env.USER_SERVICE_URL}/users`, body);
   }
 
+  @Get('/me')
+  getUser() {
+    return this.proxy.forwardGet(`${process.env.USER_SERVICE_URL}/users/me`);
+  }
+
   @Get(':id')
   getById(@Param('id') id: string) {
     return this.proxy.forwardGet(`${process.env.USER_SERVICE_URL}/users/${id}`);
