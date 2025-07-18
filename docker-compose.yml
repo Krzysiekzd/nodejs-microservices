@@ -1,118 +1,160 @@
-version: '3.9'
+version: "3.9"
+
 services:
-  # PostgreSQL for user-service and order-service
+  mongodb:
+    image: mongo:6
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "9092:27017"
+    networks:
+      nodejs_network:
+        ipv4_address: 172.21.0.2
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    ports:
+      - "9093:5672"
+      - "9094:15672"
+    networks:
+      nodejs_network:
+        ipv4_address: 172.21.0.3
+
   postgres:
     image: postgres:15
-    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - '9091:5432'
+      - "9091:5432"
     networks:
-      - nodejs_network
+      nodejs_network:
+        ipv4_address: 172.21.0.4
 
-  # MongoDB for product, inventory, and notification services
-  mongodb:
-    image: mongo:6
-    restart: always
+  nginx:
+    image: nginx:alpine
+    depends_on:
+      - api-gateway
     ports:
-      - '9092:27017'
+      - "90:80"
     volumes:
-      - mongo_data:/data/db
+      - ./nginx/conf.d:/etc/nginx/conf.d
     networks:
-      - nodejs_network
+      nodejs_network:
+        ipv4_address: 172.21.0.5
 
-  # RabbitMQ message broker
-  rabbitmq:
-    image: rabbitmq:3-management
-    ports:
-      - '9093:5672'     # AMQP
-      - '9094:15672'   # Management UI
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-    networks:
-      - nodejs_network
-
-  product-event-listener:
-    build:
-      context: ./product-event-listener
-    depends_on:
-      - rabbitmq
-    env_file:
-      - ./product-event-listener/.env
-
-  order-event-listener:
-    build:
-      context: ./order-event-listener
-    container_name: order-event-listener
-    depends_on:
-      - rabbitmq
-    env_file:
-      - ./order-event-listener/.env
-
-  # User service (NestJS + PostgreSQL)
   user-service:
     build: ./user-service
     restart: always
-    ports:
-      - '3001:3000'
     environment:
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/userdb
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    ports:
+      - "3010:3000"
     depends_on:
       - postgres
       - rabbitmq
     networks:
-      - nodejs_network
+      nodejs_network:
+        ipv4_address: 172.21.0.6
 
-  # Placeholder for other services
   product-service:
     build: ./product-service
+    restart: always
+    environment:
+      MONGODB_URL: mongodb://mongodb:27017/product-db
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
     ports:
-      - '3002:3000'
+      - "3004:3000"
     depends_on:
       - mongodb
+      - rabbitmq
     networks:
-      - nodejs_network
+      nodejs_network:
+        ipv4_address: 172.21.0.7
+
+  product-event-listener:
+    build: ./product-event-listener
+    restart: always
+    ports:
+      - "30014:3000"
+    depends_on:
+      - rabbitmq
+    networks:
+      nodejs_network:
+        ipv4_address: 172.21.0.12
 
   order-service:
     build: ./order-service
+    restart: always
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/orders
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
     ports:
-      - '3003:3000'
+      - "3009:3000"
     depends_on:
       - postgres
       - rabbitmq
     networks:
-      - nodejs_network
+      nodejs_network:
+        ipv4_address: 172.21.0.8
+
+  order-event-listener:
+    build: ./order-event-listener
+    restart: always
+    ports:
+      - "3013:3000"
+    depends_on:
+      - rabbitmq
+    networks:
+      nodejs_network:
+        ipv4_address: 172.21.0.13
 
   inventory-service:
     build: ./inventory-service
+    restart: always
+    environment:
+      MONGO_URI: mongodb://mongodb:27017/inventory
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
     ports:
-      - '3004:3000'
+      - "3007:3000"
     depends_on:
       - mongodb
       - rabbitmq
     networks:
-      - nodejs_network
+      nodejs_network:
+        ipv4_address: 172.21.0.9
 
   notification-service:
     build: ./notification-service
+    restart: always
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
     ports:
-      - '3005:3000'
+      - "3005:3000"
     depends_on:
-      - mongodb
       - rabbitmq
     networks:
-      - nodejs_network
+      nodejs_network:
+        ipv4_address: 172.21.0.10
 
   api-gateway:
     build: ./api-gateway
+    environment:
+      USER_SERVICE_URL: http://user-service:3010
+      PRODUCT_SERVICE_URL: http://product-service:3004
+      ORDER_SERVICE_URL: http://order-service:3009
+      INVENTORY_SERVICE_URL: http://inventory-service:3007
+      NOTIFICATION_SERVICE_URL: http://notification-service:3005
     ports:
-      - '3006:3000'
+      - "3011:3000"
     depends_on:
       - user-service
       - product-service
@@ -120,12 +162,14 @@ services:
       - inventory-service
       - notification-service
     networks:
-      - nodejs_network
+      nodejs_network:
+        ipv4_address: 172.21.0.11
 
 networks:
   nodejs_network:
-    driver: bridge
+    external: true
 
 volumes:
   postgres_data:
   mongo_data:
+  rabbitmq_data:
