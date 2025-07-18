@@ -6,7 +6,7 @@
 ![Forks](https://img.shields.io/github/forks/JawherKl/nodejs-microservices)
 ![Stars](https://img.shields.io/github/stars/JawherKl/nodejs-microservices)
 
-A modular, production-ready microservices system inspired by e-commerce architectures, built with TypeScript, Node.js, NestJS, ExpressJS, PostgreSQL, MongoDB, Docker, and RabbitMQ/NATS for event-driven communication.
+A scalable and modular microservices architecture built with Node.js (NestJS & ExpressJS), TypeScript, PostgreSQL, MongoDB, and Docker. It leverages RabbitMQ for event-driven communication, ideal for modern e-commerce and real-time systems.
 
 ![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
 ![NestJS](https://img.shields.io/badge/nestjs-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)
@@ -101,15 +101,15 @@ graph TB
     class extgw,extus,extps,extos,extis,extns,extpg,extmongo,extrmq ext
 ```
 
-| Microservice             | Tech Stack                           | DB         | Responsibility                                    |
-| ------------------------ | ------------------------------------ | ---------- | ------------------------------------------------- |
-| **User Service**         | NestJS                               | PostgreSQL | User registration, login, authentication, roles   |
-| **Product Service**      | ExpressJS                            | MongoDB    | Product CRUD (create, update, list, delete)       |
-| **Order Service**        | NestJS                               | PostgreSQL | Order creation, validation, and processing        |
-| **Inventory Service**    | ExpressJS                            | MongoDB    | Stock tracking, update on orders                  |
-| **Notification Service** | ExpressJS                            | MongoDB    | Email/log notifications on events                 |
-| **API Gateway**          | ExpressJS/NestJS                     | -          | Unified API entry, routing, token verification    |
-| **Message Broker**       | RabbitMQ/NATS                        | -          | Inter-service event bus                           |
+| Microservice             | Tech Stack       | DB         | Responsibility                                  |
+| ------------------------ | ---------------- | ---------- | ----------------------------------------------- |
+| **User Service**         | NestJS           | PostgreSQL | User registration, login, authentication, roles |
+| **Product Service**      | ExpressJS        | MongoDB    | Product CRUD (create, update, list, delete)     |
+| **Order Service**        | NestJS           | PostgreSQL | Order creation, validation, and processing      |
+| **Inventory Service**    | ExpressJS        | MongoDB    | Stock tracking, update on orders                |
+| **Notification Service** | ExpressJS        | MongoDB    | Email/log notifications on events               |
+| **API Gateway**          | ExpressJS/NestJS | -          | Unified API entry, routing, token verification  |
+| **Message Broker**       | RabbitMQ    | -          | Inter-service event bus                         |
 
 ---
 
@@ -132,43 +132,50 @@ nodejs-microservices/
 
 ## 🔗 Communication
 
-- **API Gateway ⇄ Services:** REST (HTTP)
-- **Between Services:** Messaging (RabbitMQ/NATS)
-  - `OrderService` emits `order_created`
-  - `InventoryService` listens and adjusts stock
-  - `NotificationService` listens and sends notification
+* **API Gateway ⇄ Services:** REST (HTTP)
+* **Between Services:** Messaging (RabbitMQ)
+
+  * `OrderService` emits `order_created`
+  * `InventoryService` listens and adjusts stock
+  * `NotificationService` listens and sends notification
 
 ---
 
 ## 🚀 Features
 
 ### 👤 User Service
-- Secure sign up & login
-- JWT authentication
-- Role-based access (admin/user)
+
+* Secure sign up & login
+* JWT authentication
+* Role-based access (admin/user)
 
 ### 🛍️ Product Service
-- Create/list/delete products
-- Fetch by product ID
-- Simple MongoDB schema
+
+* Create/list/delete products
+* Fetch by product ID
+* Simple MongoDB schema
 
 ### 🛒 Order Service
-- Place new orders
-- Validate users & product stock
-- Emits `order_created` event
+
+* Place new orders
+* Validate users & product stock
+* Emits `order_created` event
 
 ### 🏬 Inventory Service
-- Listens to `order_created`
-- Decreases stock or rejects if insufficient
+
+* Listens to `order_created`
+* Decreases stock or rejects if insufficient
 
 ### 📢 Notification Service
-- Listens to events (`order_created`, etc)
-- Sends notification (email/log)
+
+* Listens to events (`order_created`, etc)
+* Sends notification (email/log)
 
 ### 🌍 API Gateway
-- One entrypoint for frontend
-- Reverse proxy, JWT verification
-- Routes `/products`, `/orders`, `/users` to services
+
+* One entrypoint for frontend
+* Reverse proxy, JWT verification
+* Routes `/products`, `/orders`, `/users` to services
 
 ---
 
@@ -176,30 +183,45 @@ nodejs-microservices/
 
 Powered by `docker-compose.yml`:
 
-- All microservices (with build contexts)
-- MongoDB, PostgreSQL databases
-- RabbitMQ or NATS for messaging
-- Optional admin UIs: pgAdmin, Mongo Express, RabbitMQ dashboard
+* All microservices (with build contexts)
+* MongoDB, PostgreSQL databases
+* RabbitMQ or NATS for messaging
+* Optional admin UIs: pgAdmin, Mongo Express, RabbitMQ dashboard
+
+### 🧪 Docker Network & Setup
+
+Before starting the app, **create the Docker network**:
 
 ```bash
-docker-compose up --build
+docker network create \
+  --driver=bridge \
+  --subnet=172.21.0.0/24 \
+  nodejs_network
 ```
+
+Then run the entire system:
+
+```bash
+sudo docker-compose up --build -d
+```
+
+All services will be available on their respective internal IPs/ports or via the API Gateway.
 
 ---
 
 ## 🛣️ Roadmap
 
-- [ ] Add OpenAPI/Swagger docs for each service
-- [ ] Service discovery and dynamic routing
-- [ ] Production-ready monitoring & logging
-- [ ] Integration with frontend (React/Angular)
-- [ ] Advanced notification channels (SMS, Push)
+* [ ] Add OpenAPI/Swagger docs for each service
+* [ ] Service discovery and dynamic routing
+* [ ] Production-ready monitoring & logging
+* [ ] Integration with frontend (React/Angular)
+* [ ] Advanced notification channels (SMS, Push)
 
 ---
 
 ## 🤝 Contributing
 
-Contributions, ideas, and feedback are welcome!  
+Contributions, ideas, and feedback are welcome!
 Feel free to open issues or submit pull requests.
 
 ---
@@ -212,13 +234,13 @@ MIT License. See [LICENSE](LICENSE) for details.
 
 ## 👨‍💻 Author
 
-**Jawher Kallel**  
+**Jawher Kallel**
 [GitHub @JawherKl](https://github.com/JawherKl)
 
 ---
 
 Made with ❤️ for scalable, real-world systems.
 
+## 🌟 Stargazers over time
 
-## Stargazers over time
 [![Stargazers over time](https://starchart.cc/JawherKl/nodejs-microservices.svg?variant=adaptive)](https://starchart.cc/JawherKl/nodejs-microservices)
