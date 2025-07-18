@@ -216,6 +216,7 @@ All services will be available on their respective internal IPs/ports or via the
 * [ ] Production-ready monitoring & logging
 * [ ] Integration with frontend (React/Angular)
 * [ ] Advanced notification channels (SMS, Push)
+* [ ] Create CI/CD Pipeline with GitHub Actions
 
 ---
 
