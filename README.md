@@ -185,7 +185,7 @@ Powered by `docker-compose.yml`:
 
 * All microservices (with build contexts)
 * MongoDB, PostgreSQL databases
-* RabbitMQ or NATS for messaging
+* RabbitMQ for messaging
 * Optional admin UIs: pgAdmin, Mongo Express, RabbitMQ dashboard
 
 ### 🧪 Docker Network & Setup
