@@ -190,22 +190,9 @@ Powered by `docker-compose.yml`:
 
 ### 🧪 Docker Network & Setup
 
-Before starting the app, **create the Docker network**:
-
-```bash
-docker network create \
-  --driver=bridge \
-  --subnet=172.21.0.0/24 \
-  nodejs_network
 ```
-
-Then run the entire system:
-
-```bash
-sudo docker-compose up --build -d
+docker compose up --build
 ```
-
-All services will be available on their respective internal IPs/ports or via the API Gateway.
 
 ---
 
