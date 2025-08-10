@@ -24,6 +24,12 @@ services:
     networks:
       nodejs_network:
         ipv4_address: 172.21.0.3
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
 
   postgres:
     image: postgres:15
@@ -32,6 +38,7 @@ services:
       POSTGRES_PASSWORD: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "9091:5432"
     networks:
@@ -59,8 +66,10 @@ services:
     ports:
       - "3010:3000"
     depends_on:
-      - postgres
-      - rabbitmq
+      postgres:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
     networks:
       nodejs_network:
         ipv4_address: 172.21.0.6
@@ -71,11 +80,14 @@ services:
     environment:
       MONGODB_URL: mongodb://mongodb:27017/product-db
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+
     ports:
       - "3004:3000"
     depends_on:
-      - mongodb
-      - rabbitmq
+      mongodb:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
     networks:
       nodejs_network:
         ipv4_address: 172.21.0.7
@@ -83,10 +95,13 @@ services:
   product-event-listener:
     build: ./product-event-listener
     restart: always
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
     ports:
       - "30014:3000"
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
     networks:
       nodejs_network:
         ipv4_address: 172.21.0.12
@@ -100,8 +115,10 @@ services:
     ports:
       - "3009:3000"
     depends_on:
-      - postgres
-      - rabbitmq
+      postgres:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
     networks:
       nodejs_network:
         ipv4_address: 172.21.0.8
@@ -112,7 +129,8 @@ services:
     ports:
       - "3013:3000"
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
     networks:
       nodejs_network:
         ipv4_address: 172.21.0.13
@@ -126,8 +144,10 @@ services:
     ports:
       - "3007:3000"
     depends_on:
-      - mongodb
-      - rabbitmq
+      mongodb:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
     networks:
       nodejs_network:
         ipv4_address: 172.21.0.9
@@ -140,7 +160,8 @@ services:
     ports:
       - "3005:3000"
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
     networks:
       nodejs_network:
         ipv4_address: 172.21.0.10
@@ -167,7 +188,10 @@ services:
 
 networks:
   nodejs_network:
-    external: true
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/24
 
 volumes:
   postgres_data:
