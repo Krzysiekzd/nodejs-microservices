@@ -1,199 +1,203 @@
-version: "3.9"
-
 services:
-  mongodb:
-    image: mongo:6
-    volumes:
-      - mongo_data:/data/db
-    ports:
-      - "9092:27017"
-    networks:
-      nodejs_network:
-        ipv4_address: 172.21.0.2
-
-  rabbitmq:
-    image: rabbitmq:3-management
+  # ===== API GATEWAY =====
+  api-gateway:
+    build: ./api-gateway
+    env_file: [ ./.env ]
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-    ports:
-      - "9093:5672"
-      - "9094:15672"
-    networks:
-      nodejs_network:
-        ipv4_address: 172.21.0.3
-    healthcheck:
-      test: ["CMD", "rabbitmqctl", "status"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-      start_period: 10s
-
-  postgres:
-    image: postgres:15
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - "9091:5432"
-    networks:
-      nodejs_network:
-        ipv4_address: 172.21.0.4
-
-  nginx:
-    image: nginx:alpine
+      - USER_SERVICE_URL=${USER_SERVICE_URL}
+      - PRODUCT_SERVICE_URL=${PRODUCT_SERVICE_URL}
+      - ORDER_SERVICE_URL=${ORDER_SERVICE_URL}
+      - INVENTORY_SERVICE_URL=${INVENTORY_SERVICE_URL}
+      - NOTIFICATION_SERVICE_URL=${NOTIFICATION_SERVICE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
+      - NODE_ENV=${NODE_ENV}
+      - PORT=${SERVICE_PORT}
+    ports: [ "${API_GATEWAY_HOST_PORT}:${SERVICE_PORT}" ]
     depends_on:
-      - api-gateway
-    ports:
-      - "90:80"
-    volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-    networks:
-      nodejs_network:
-        ipv4_address: 172.21.0.5
+      rabbitmq:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+      product-service:
+        condition: service_started
+      order-service:
+        condition: service_started
+      inventory-service:
+        condition: service_started
+      notification-service:
+        condition: service_started
+    restart: unless-stopped
+    networks: [app]
 
+  # ===== USER SERVICE (Nest) =====
   user-service:
     build: ./user-service
-    restart: always
+    env_file: [ ./.env ]
     environment:
-      DATABASE_URL: postgres://postgres:postgres@postgres:5432/userdb
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
-    ports:
-      - "3010:3000"
+      - PORT=${SERVICE_PORT}
+      - DATABASE_URL=${USER_DATABASE_URL}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB_USERS}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
+      - NODE_ENV=${NODE_ENV}
+    ports: [ "${USER_SERVICE_HOST_PORT}:${SERVICE_PORT}" ]
     depends_on:
       postgres:
         condition: service_started
       rabbitmq:
         condition: service_healthy
-    networks:
-      nodejs_network:
-        ipv4_address: 172.21.0.6
+    restart: unless-stopped
+    networks: [app]
 
+  # ===== PRODUCT SERVICE (Express) =====
   product-service:
     build: ./product-service
-    restart: always
+    env_file: [ ./.env ]
     environment:
-      MONGODB_URL: mongodb://mongodb:27017/product-db
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
-
-    ports:
-      - "3004:3000"
+      - PORT=${SERVICE_PORT}
+      - MONGO_URI=${PRODUCT_MONGO_URL}        # cover both names
+      - MONGODB_URL=${PRODUCT_MONGO_URL}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - NODE_ENV=${NODE_ENV}
+    ports: [ "${PRODUCT_SERVICE_HOST_PORT}:${SERVICE_PORT}" ]
     depends_on:
       mongodb:
         condition: service_started
       rabbitmq:
         condition: service_healthy
-    networks:
-      nodejs_network:
-        ipv4_address: 172.21.0.7
+    restart: unless-stopped
+    networks: [app]
+
+  # ===== ORDER SERVICE (Nest) =====
+  order-service:
+    build: ./order-service
+    env_file: [ ./.env ]
+    environment:
+      - PORT=${SERVICE_PORT}
+      - DATABASE_URL=${ORDERS_DATABASE_URL}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB_ORDERS}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - NODE_ENV=${NODE_ENV}
+    ports: [ "${ORDER_SERVICE_HOST_PORT}:${SERVICE_PORT}" ]
+    depends_on:
+      postgres:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+    networks: [app]
+
+  # ===== INVENTORY SERVICE (Express) =====
+  inventory-service:
+    build: ./inventory-service
+    env_file: [ ./.env ]
+    environment:
+      - PORT=${SERVICE_PORT}
+      - MONGO_URI=${INVENTORY_MONGO_URL}      # << required by code
+      - MONGODB_URL=${INVENTORY_MONGO_URL}    # optional alias
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - NODE_ENV=${NODE_ENV}
+    ports: [ "${INVENTORY_SERVICE_HOST_PORT}:${SERVICE_PORT}" ]
+    depends_on:
+      mongodb:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+    networks: [app]
+
+  # ===== NOTIFICATION SERVICE (Express) =====
+  notification-service:
+    build: ./notification-service
+    env_file: [ ./.env ]
+    environment:
+      - PORT=${SERVICE_PORT}
+      - MONGO_URI=${NOTIFICATION_MONGO_URL}
+      - MONGODB_URL=${NOTIFICATION_MONGO_URL}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - NODE_ENV=${NODE_ENV}
+    ports: [ "${NOTIFICATION_SERVICE_HOST_PORT}:${SERVICE_PORT}" ]
+    depends_on:
+      mongodb:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+    networks: [app]
+
+  # ===== EVENT LISTENERS  =====
+  order-event-listener:
+    build: ./order-event-listener
+    env_file: [ ./.env ]
+    environment:
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - NODE_ENV=${NODE_ENV}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+    networks: [app]
 
   product-event-listener:
     build: ./product-event-listener
-    restart: always
+    env_file: [ ./.env ]
     environment:
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
-    ports:
-      - "30014:3000"
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - NODE_ENV=${NODE_ENV}
     depends_on:
       rabbitmq:
         condition: service_healthy
-    networks:
-      nodejs_network:
-        ipv4_address: 172.21.0.12
+    restart: unless-stopped
+    networks: [app]
 
-  order-service:
-    build: ./order-service
-    restart: always
+  # ===== INFRA =====
+  postgres:
+    image: postgres:15
     environment:
-      DATABASE_URL: postgres://postgres:postgres@postgres:5432/orders
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
-    ports:
-      - "3009:3000"
-    depends_on:
-      postgres:
-        condition: service_started
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      nodejs_network:
-        ipv4_address: 172.21.0.8
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports: [ "9091:5432" ]
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/00-init.sql:ro
+    restart: unless-stopped
+    networks: [app]
 
-  order-event-listener:
-    build: ./order-event-listener
-    restart: always
-    ports:
-      - "3013:3000"
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      nodejs_network:
-        ipv4_address: 172.21.0.13
+  mongodb:
+    image: mongo:6
+    ports: [ "9092:27017" ]
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+    networks: [app]
 
-  inventory-service:
-    build: ./inventory-service
-    restart: always
-    environment:
-      MONGO_URI: mongodb://mongodb:27017/inventory
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
-    ports:
-      - "3007:3000"
-    depends_on:
-      mongodb:
-        condition: service_started
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      nodejs_network:
-        ipv4_address: 172.21.0.9
 
-  notification-service:
-    build: ./notification-service
-    restart: always
-    environment:
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+  rabbitmq:
+    image: rabbitmq:3-management
     ports:
-      - "3005:3000"
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      nodejs_network:
-        ipv4_address: 172.21.0.10
+      - "9093:5672"
+      - "9094:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    networks: [app]
 
-  api-gateway:
-    build: ./api-gateway
-    environment:
-      USER_SERVICE_URL: http://user-service:3010
-      PRODUCT_SERVICE_URL: http://product-service:3004
-      ORDER_SERVICE_URL: http://order-service:3009
-      INVENTORY_SERVICE_URL: http://inventory-service:3007
-      NOTIFICATION_SERVICE_URL: http://notification-service:3005
-    ports:
-      - "3011:3000"
-    depends_on:
-      - user-service
-      - product-service
-      - order-service
-      - inventory-service
-      - notification-service
-    networks:
-      nodejs_network:
-        ipv4_address: 172.21.0.11
 
 networks:
-  nodejs_network:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.21.0.0/24
+  app: {}
 
 volumes:
-  postgres_data:
-  mongo_data:
-  rabbitmq_data:
+  postgres_data: {}
+  mongo_data: {}
