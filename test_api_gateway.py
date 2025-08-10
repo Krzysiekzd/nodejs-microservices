@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-NodeJS Microservices — API Gateway End‑to‑End Test (timestamps + robust retries + ✅ confirmations)
+NodeJS Microservices — API Gateway Tests (timestamps + robust retries + ✅ confirmations)
 --------------------------------------------------------------------------------------------------
 Requirements: Python 3.9+, pip install requests
 
